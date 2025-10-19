@@ -1,0 +1,7 @@
+node_modules/
+config.json
+coverage/
+frontend/node_modules/
+frontend/build/
+*.log
+.DS_Store
