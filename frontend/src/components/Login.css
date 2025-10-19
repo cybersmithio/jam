@@ -72,6 +72,15 @@
   background: #e7f3ff;
 }
 
+.apple-button {
+  border-color: #000000;
+  color: #333;
+}
+
+.apple-button:hover {
+  background: #f0f0f0;
+}
+
 .button-icon {
   width: 20px;
   height: 20px;

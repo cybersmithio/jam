@@ -29,6 +29,14 @@
       "callbackPath": "/auth/facebook/callback",
       "scope": ["public_profile", "email"],
       "profileFields": ["id", "displayName", "emails", "name"]
+    },
+    "apple": {
+      "clientID": "your-apple-service-id",
+      "teamID": "your-apple-team-id",
+      "keyID": "your-apple-key-id",
+      "privateKeyPath": "./keys/AuthKey_XXXXXXXXXX.p8",
+      "callbackPath": "/auth/apple/callback",
+      "scope": ["name", "email"]
     }
   }
 }

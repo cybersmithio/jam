@@ -2,6 +2,9 @@ const express = require('express');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
+const AppleStrategy = require('passport-apple').Strategy;
+const fs = require('fs');
+const path = require('path');
 const config = require('../config');
 
 const router = express.Router();
@@ -76,6 +79,55 @@ if (config.idProviders.facebook && config.idProviders.facebook.clientID) {
   }));
 }
 
+/**
+ * Configure Apple Sign In Strategy
+ * Uses config.buildPublicUrl() to construct callback URL with public protocol/host/port
+ */
+if (config.idProviders.apple && config.idProviders.apple.clientID) {
+  const appleConfig = config.idProviders.apple;
+
+  // Build the full callback URL using public protocol, host, and port
+  const callbackURL = config.buildPublicUrl(appleConfig.callbackPath || '/auth/apple/callback');
+
+  // Read the private key file
+  let privateKey;
+  try {
+    const keyPath = path.resolve(appleConfig.privateKeyPath);
+    privateKey = fs.readFileSync(keyPath, 'utf8');
+  } catch (error) {
+    console.error('Error reading Apple private key:', error.message);
+    console.log('Apple Sign In will not be available');
+  }
+
+  if (privateKey) {
+    passport.use(new AppleStrategy({
+      clientID: appleConfig.clientID,
+      teamID: appleConfig.teamID,
+      keyID: appleConfig.keyID,
+      privateKeyString: privateKey,
+      callbackURL: callbackURL,
+      scope: appleConfig.scope || ['name', 'email']
+    },
+    async (accessToken, refreshToken, idToken, profile, done) => {
+      try {
+        // Apple returns user info differently - it's in the idToken
+        // The name is only provided on first authorization
+        const user = {
+          idpId: profile.id || profile.sub,
+          provider: 'apple',
+          name: profile.name ? `${profile.name.firstName || ''} ${profile.name.lastName || ''}`.trim() : profile.email,
+          email: profile.email,
+          profile: profile
+        };
+
+        return done(null, user);
+      } catch (error) {
+        return done(error, null);
+      }
+    }));
+  }
+}
+
 // Serialize/deserialize user for session management
 passport.serializeUser((user, done) => {
   done(null, user);
@@ -113,6 +165,21 @@ router.get('/facebook',
 
 router.get('/facebook/callback',
   passport.authenticate('facebook', { failureRedirect: '/login' }),
+  (req, res) => {
+    // Successful authentication, redirect to welcome page
+    res.redirect('/welcome');
+  }
+);
+
+/**
+ * Apple Sign In Routes
+ */
+router.post('/apple',
+  passport.authenticate('apple')
+);
+
+router.post('/apple/callback',
+  passport.authenticate('apple', { failureRedirect: '/login' }),
   (req, res) => {
     // Successful authentication, redirect to welcome page
     res.redirect('/welcome');
