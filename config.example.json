@@ -1,0 +1,34 @@
+{
+  "server": {
+    "port": 3000,
+    "host": "localhost",
+    "publicProtocol": "http",
+    "publicHost": "localhost",
+    "publicPort": 3000
+  },
+  "database": {
+    "uri": "mongodb://localhost:27017/jam-auth"
+  },
+  "jwt": {
+    "secret": "your-secret-key-change-this",
+    "expiration": "24h"
+  },
+  "session": {
+    "secret": "your-session-secret-change-this"
+  },
+  "idProviders": {
+    "google": {
+      "clientID": "your-google-client-id",
+      "clientSecret": "your-google-client-secret",
+      "callbackPath": "/auth/google/callback",
+      "scope": ["profile", "email"]
+    },
+    "facebook": {
+      "clientID": "your-facebook-app-id",
+      "clientSecret": "your-facebook-app-secret",
+      "callbackPath": "/auth/facebook/callback",
+      "scope": ["public_profile", "email"],
+      "profileFields": ["id", "displayName", "emails", "name"]
+    }
+  }
+}

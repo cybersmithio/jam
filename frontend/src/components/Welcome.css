@@ -1,0 +1,68 @@
+.welcome-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.welcome-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+}
+
+.welcome-card h1 {
+  color: #333;
+  margin-bottom: 30px;
+  font-size: 32px;
+}
+
+.user-info {
+  margin-bottom: 30px;
+  padding: 20px;
+  background: #f8f8f8;
+  border-radius: 6px;
+}
+
+.greeting {
+  font-size: 20px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.greeting strong {
+  color: #4285F4;
+}
+
+.email {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.provider {
+  color: #999;
+  font-size: 12px;
+  text-transform: capitalize;
+}
+
+.logout-button {
+  padding: 12px 30px;
+  background: #f44336;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-family: inherit;
+}
+
+.logout-button:hover {
+  background: #d32f2f;
+}
