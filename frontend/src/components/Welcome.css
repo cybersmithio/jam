@@ -51,6 +51,59 @@
   text-transform: capitalize;
 }
 
+.jwt-container {
+  margin: 30px 0;
+  padding: 20px;
+  background: #f0f7ff;
+  border: 1px solid #cce0ff;
+  border-radius: 6px;
+  text-align: left;
+}
+
+.jwt-container h3 {
+  color: #333;
+  font-size: 16px;
+  margin-bottom: 15px;
+  margin-top: 0;
+  text-align: center;
+}
+
+.jwt-display {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 15px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.jwt-token {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: #333;
+  word-break: break-all;
+  display: block;
+  line-height: 1.5;
+}
+
+.copy-button {
+  width: 100%;
+  padding: 10px;
+  background: #4285F4;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-family: inherit;
+}
+
+.copy-button:hover {
+  background: #357ae8;
+}
+
 .logout-button {
   padding: 12px 30px;
   background: #f44336;

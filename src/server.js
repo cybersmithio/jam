@@ -1,10 +1,14 @@
 const express = require('express');
+const http = require('http');
+const https = require('https');
+const fs = require('fs');
 const path = require('path');
 const session = require('express-session');
 const passport = require('passport');
 const cors = require('cors');
 const config = require('./config');
 const authRoutes = require('./routes/auth');
+const jwtUtils = require('./utils/jwt');
 
 const app = express();
 
@@ -55,6 +59,20 @@ app.post('/api/logout', (req, res) => {
   });
 });
 
+// JWT token endpoint - generate token for authenticated users
+app.get('/api/token', (req, res) => {
+  if (req.isAuthenticated()) {
+    try {
+      const token = jwtUtils.generateToken(req.user);
+      res.json({ token });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to generate token' });
+    }
+  } else {
+    res.status(401).json({ error: 'Not authenticated' });
+  }
+});
+
 // API 404 handler
 app.use('/api', (req, res) => {
   res.status(404).json({ error: 'API endpoint not found' });
@@ -77,13 +95,43 @@ app.get('*', (req, res) => {
 // Start server on internal port
 const PORT = config.server.port || 3000;
 const HOST = config.server.host || 'localhost';
-const server = app.listen(PORT, HOST, () => {
-  console.log(`Server listening internally on http://${HOST}:${PORT}`);
-  console.log(`Public URL: ${config.getPublicBaseUrl()}`);
-  if (config.server.publicProtocol !== 'http' || config.server.publicPort !== PORT) {
-    console.log('Note: Server is configured for proxy - OAuth callbacks will use public URL');
+let server;
+
+// Create HTTPS server if enabled, otherwise use HTTP
+if (config.server.https && config.server.https.enabled) {
+  try {
+    const httpsOptions = {
+      key: fs.readFileSync(path.resolve(config.server.https.keyPath)),
+      cert: fs.readFileSync(path.resolve(config.server.https.certPath))
+    };
+
+    server = https.createServer(httpsOptions, app);
+    server.listen(PORT, HOST, () => {
+      console.log(`Server listening internally on https://${HOST}:${PORT}`);
+      console.log(`Public URL: ${config.getPublicBaseUrl()}`);
+      if (config.server.publicProtocol !== 'https' || config.server.publicPort !== PORT) {
+        console.log('Note: Server is configured for proxy - OAuth callbacks will use public URL');
+      }
+    });
+  } catch (error) {
+    console.error('Error loading HTTPS certificates:', error.message);
+    console.log('Falling back to HTTP');
+    server = http.createServer(app);
+    server.listen(PORT, HOST, () => {
+      console.log(`Server listening internally on http://${HOST}:${PORT}`);
+      console.log(`Public URL: ${config.getPublicBaseUrl()}`);
+    });
   }
-});
+} else {
+  server = http.createServer(app);
+  server.listen(PORT, HOST, () => {
+    console.log(`Server listening internally on http://${HOST}:${PORT}`);
+    console.log(`Public URL: ${config.getPublicBaseUrl()}`);
+    if (config.server.publicProtocol !== 'http' || config.server.publicPort !== PORT) {
+      console.log('Note: Server is configured for proxy - OAuth callbacks will use public URL');
+    }
+  });
+}
 
 // Export for testing
 module.exports = { app, server };

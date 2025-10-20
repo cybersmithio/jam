@@ -19,6 +19,15 @@ This is an authentication microservice that integrates with public Identity Prov
 - All code must have corresponding tests
 - Tests should be run and pass before considering any feature complete
 
+**Test Best Practices:**
+- **NEVER permanently modify configuration files during tests**
+- If a test needs to modify `config.json` or any other configuration file:
+  1. Save the original file content in `beforeAll()` hook
+  2. Restore the original content in `afterAll()` hook
+  3. See `src/__tests__/config.test.js` for the correct pattern
+- Tests must clean up after themselves (close servers, release ports, delete temp files)
+- Use `--runInBand` flag when running tests to avoid port conflicts: `npm test -- --runInBand`
+
 ## Architecture Overview
 
 **Three-Tier Architecture:**
@@ -59,15 +68,17 @@ This is an authentication microservice that integrates with public Identity Prov
 
 ## Configuration
 
-The backend uses `config.json` (create from `config.example.json`) containing:
+The backend uses `data/config.json` (create from `data/config.example.json`) containing:
 - IdP client credentials and endpoints
 - JWT signing configuration and expiration settings
 - Database connection settings
 - Server settings (internal and public URLs)
+- HTTPS/TLS certificate paths
 
 **Important:**
-- `config.json` is gitignored - always use `config.example.json` as the template.
+- `data/config.json` is gitignored - always use `data/config.example.json` as the template.
 - The server supports running behind a proxy with separate internal/external configurations.
+- SSL certificates are stored in `data/certsAndKeys/` (also gitignored)
 
 ### Public URL Generation
 
@@ -98,7 +109,7 @@ The server listens on `config.server.port` and `config.server.host` but generate
 
 **Setup:**
 - `npm install` - Install all dependencies (backend + frontend)
-- `cp config.example.json config.json` - Create config file
+- `cp data/config.example.json data/config.json` - Create config file
 - `npm run build:frontend` - Build React frontend for production
 
 **Development:**

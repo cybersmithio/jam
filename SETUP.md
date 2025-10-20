@@ -10,9 +10,9 @@
 
 2. **Configure the Application**
    ```bash
-   cp config.example.json config.json
+   cp data/config.example.json data/config.json
    ```
-   Edit `config.json` with your:
+   Edit `data/config.json` with your:
    - MongoDB connection string
    - JWT secret key
    - Session secret
@@ -77,8 +77,12 @@ jam/
 │   │   ├── App.js        # Main app with routing
 │   │   └── index.js      # React entry point
 │   └── public/           # Static assets
-├── config.json           # Application configuration (gitignored)
-├── config.example.json   # Example configuration
+├── data/                 # Configuration and certificates
+│   ├── config.json       # Application configuration (gitignored)
+│   ├── config.example.json # Example configuration
+│   └── certsAndKeys/     # SSL certificates (gitignored)
+│       ├── server-cert.pem # Self-signed certificate
+│       └── server-key.pem  # Private key
 └── package.json          # Dependencies and scripts
 ```
 
@@ -93,7 +97,7 @@ jam/
 
 ## Configuration
 
-The application uses `config.json` for all configuration. Key sections:
+The application uses `data/config.json` for all configuration. Key sections:
 
 - **server**: Port and host settings
   - `port`: Internal port the server listens on (e.g., 3000)

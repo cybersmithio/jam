@@ -4,7 +4,9 @@ import './Welcome.css';
 
 function Welcome() {
   const [user, setUser] = useState(null);
+  const [jwt, setJwt] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -18,6 +20,17 @@ function Welcome() {
       })
       .then(data => {
         setUser(data);
+        // Also fetch JWT token
+        return fetch('/api/token');
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to fetch token');
+        }
+        return response.json();
+      })
+      .then(data => {
+        setJwt(data.token);
         setLoading(false);
       })
       .catch(error => {
@@ -36,6 +49,19 @@ function Welcome() {
         console.error('Error logging out:', error);
         navigate('/login');
       });
+  };
+
+  const handleCopyToken = () => {
+    if (jwt) {
+      navigator.clipboard.writeText(jwt)
+        .then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        })
+        .catch(error => {
+          console.error('Failed to copy token:', error);
+        });
+    }
   };
 
   if (loading) {
@@ -63,6 +89,22 @@ function Welcome() {
             )}
           </div>
         )}
+
+        {jwt && (
+          <div className="jwt-container">
+            <h3>JWT Token (for demonstration)</h3>
+            <div className="jwt-display">
+              <code className="jwt-token">{jwt}</code>
+            </div>
+            <button
+              className="copy-button"
+              onClick={handleCopyToken}
+            >
+              {copied ? 'Copied!' : 'Copy Token'}
+            </button>
+          </div>
+        )}
+
         <button className="logout-button" onClick={handleLogout}>
           Logout
         </button>

@@ -13,7 +13,10 @@ describe('Server Tests', () => {
 
   afterEach((done) => {
     if (server) {
-      server.close(done);
+      server.close(() => {
+        // Give a small delay to ensure port is released
+        setTimeout(done, 100);
+      });
     } else {
       done();
     }

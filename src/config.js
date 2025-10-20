@@ -5,7 +5,7 @@ const path = require('path');
  * Load configuration from config.json file
  */
 function loadConfig() {
-  const configPath = path.join(__dirname, '..', 'config.json');
+  const configPath = path.join(__dirname, '..', 'data', 'config.json');
 
   try {
     const configFile = fs.readFileSync(configPath, 'utf8');
@@ -22,6 +22,15 @@ function loadConfig() {
       config.server.publicPort = config.server.port || 3000;
     }
 
+    // Set defaults for HTTPS if not specified
+    if (!config.server.https) {
+      config.server.https = {
+        enabled: false,
+        certPath: './data/certsAndKeys/server-cert.pem',
+        keyPath: './data/certsAndKeys/server-key.pem'
+      };
+    }
+
     return config;
   } catch (error) {
     console.error('Error loading config.json:', error.message);
@@ -34,7 +43,12 @@ function loadConfig() {
         host: 'localhost',
         publicProtocol: 'http',
         publicHost: 'localhost',
-        publicPort: 3000
+        publicPort: 3000,
+        https: {
+          enabled: false,
+          certPath: './data/certsAndKeys/server-cert.pem',
+          keyPath: './data/certsAndKeys/server-key.pem'
+        }
       },
       database: {
         uri: 'mongodb://localhost:27017/jam-auth'

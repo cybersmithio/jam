@@ -1,0 +1,47 @@
+{
+  "server": {
+    "port": 3000,
+    "host": "localhost",
+    "publicProtocol": "http",
+    "publicHost": "localhost",
+    "publicPort": 3000,
+    "https": {
+      "enabled": false,
+      "certPath": "./data/certsAndKeys/server-cert.pem",
+      "keyPath": "./data/certsAndKeys/server-key.pem"
+    }
+  },
+  "database": {
+    "uri": "mongodb://localhost:27017/jam-auth"
+  },
+  "jwt": {
+    "secret": "your-secret-key-change-this",
+    "expiration": "24h"
+  },
+  "session": {
+    "secret": "your-session-secret-change-this"
+  },
+  "idProviders": {
+    "google": {
+      "clientID": "your-google-client-id",
+      "clientSecret": "your-google-client-secret",
+      "callbackPath": "/auth/google/callback",
+      "scope": ["profile", "email"]
+    },
+    "facebook": {
+      "clientID": "your-facebook-app-id",
+      "clientSecret": "your-facebook-app-secret",
+      "callbackPath": "/auth/facebook/callback",
+      "scope": ["public_profile", "email"],
+      "profileFields": ["id", "displayName", "emails", "name"]
+    },
+    "apple": {
+      "clientID": "your-apple-service-id",
+      "teamID": "your-apple-team-id",
+      "keyID": "your-apple-key-id",
+      "privateKeyPath": "./keys/AuthKey_XXXXXXXXXX.p8",
+      "callbackPath": "/auth/apple/callback",
+      "scope": ["name", "email"]
+    }
+  }
+}

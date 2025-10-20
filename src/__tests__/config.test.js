@@ -2,8 +2,16 @@ const fs = require('fs');
 const path = require('path');
 
 describe('Config Tests', () => {
-  const originalConfigPath = path.join(__dirname, '..', '..', 'config.json');
-  const testConfigPath = path.join(__dirname, '..', '..', 'config.test.json');
+  const originalConfigPath = path.join(__dirname, '..', '..', 'data', 'config.json');
+  const testConfigPath = path.join(__dirname, '..', '..', 'data', 'config.test.json');
+  let originalConfig;
+
+  beforeAll(() => {
+    // Save the original config
+    if (fs.existsSync(originalConfigPath)) {
+      originalConfig = fs.readFileSync(originalConfigPath, 'utf8');
+    }
+  });
 
   beforeEach(() => {
     // Clear require cache
@@ -14,6 +22,13 @@ describe('Config Tests', () => {
     // Clean up test config file
     if (fs.existsSync(testConfigPath)) {
       fs.unlinkSync(testConfigPath);
+    }
+  });
+
+  afterAll(() => {
+    // Restore the original config
+    if (originalConfig) {
+      fs.writeFileSync(originalConfigPath, originalConfig);
     }
   });
 
