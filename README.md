@@ -35,6 +35,23 @@ The purpose of this project is to provide a backend service that authenticates u
 # Development notes
 * All code must have tests written first, and ensure the tests are all failing, before writing the code to pass the tests.
 
+# JWT Token Retrieval
+
+After successful OAuth authentication, client applications retrieve the JWT token via a separate API call to `GET /api/token`.
+
+**Why not include JWT in the OAuth callback redirect?**
+- JWT tokens are typically 500-1000+ characters and can exceed URL length limits
+- Including tokens in URL parameters exposes them in browser history and server logs
+- Separate API calls keep tokens in secure response bodies, not URLs
+
+**Pattern:**
+1. User completes OAuth flow → redirected to `/welcome` with session cookie
+2. Client makes authenticated request to `GET /api/token`
+3. Server returns `{ "token": "eyJhbG..." }`
+4. Client uses JWT for authenticating with other microservices
+
+See `SETUP.md` for detailed implementation examples.
+
 
 
 

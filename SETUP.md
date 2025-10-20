@@ -164,10 +164,69 @@ This ensures that:
 - The server listens on the internal port/protocol
 - Standard ports (80, 443) are omitted from URLs automatically
 
+## JWT Token Usage
+
+After a user successfully authenticates via OAuth, the application generates a signed JWT that can be used by other microservices.
+
+### Retrieving the JWT
+
+**Important:** JWTs are retrieved via a separate API call rather than being included in the OAuth callback redirect. This is because JWT tokens can be quite large (often 500-1000+ characters), and passing them in URL query parameters would:
+- Exceed URL length limits in some browsers/servers
+- Expose the token in browser history and server logs
+- Create security risks with token leakage
+
+**Proper JWT Retrieval Pattern:**
+
+1. User authenticates via OAuth (e.g., `/auth/google`)
+2. OAuth callback redirects to `/welcome` with session established
+3. Frontend makes authenticated request to `GET /api/token`
+4. Server returns JWT in response body: `{ "token": "eyJhbG..." }`
+5. Client uses JWT for subsequent API calls to other microservices
+
+**Example:**
+```javascript
+// After successful OAuth login, user is redirected to /welcome
+// The Welcome component then fetches the JWT:
+
+fetch('/api/token')
+  .then(response => response.json())
+  .then(data => {
+    const jwt = data.token;
+    // Use this JWT for authenticating with other microservices
+    // Store in memory or sessionStorage (NOT localStorage for security)
+  });
+```
+
+### JWT Structure
+
+The generated JWT contains:
+- `sub`: Subject - User's IdP ID
+- `idpId`: User's ID from the identity provider
+- `provider`: OAuth provider (google, facebook, apple)
+- `email`: User's email address
+- `name`: User's display name
+- `iss`: Issuer - "jam-auth-service"
+- `exp`: Expiration timestamp (configurable, default 24h)
+- `iat`: Issued at timestamp
+
+### Using the JWT
+
+Other microservices can verify the JWT using the shared secret from `config.jwt.secret`:
+
+```javascript
+const jwt = require('jsonwebtoken');
+const config = require('./config');
+
+// Verify JWT from client request
+const token = req.headers.authorization?.replace('Bearer ', '');
+const decoded = jwt.verify(token, config.jwt.secret);
+// Now you have access to decoded.email, decoded.name, etc.
+```
+
 ## Next Steps
 
 To complete the authentication flow:
 1. Set up MongoDB and update the database URI in config.json
 2. Create database models for user accounts
-3. Implement JWT generation and validation
-4. Add user matching logic across different IdPs
+3. Add user matching logic across different IdPs
+4. Implement JWT refresh token mechanism for long-lived sessions
