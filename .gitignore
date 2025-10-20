@@ -1,5 +1,6 @@
 node_modules/
-config.json
+data/config.json
+data/certsAndKeys/
 coverage/
 frontend/node_modules/
 frontend/build/
