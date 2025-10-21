@@ -8,17 +8,26 @@
    ```
    This will automatically install both backend and frontend dependencies.
 
-2. **Configure the Application**
+2. **Start MongoDB**
+
+   Use Docker to run MongoDB locally:
+   ```bash
+   docker-compose up -d
+   ```
+
+   See [DOCKER.md](DOCKER.md) for detailed MongoDB setup instructions.
+
+3. **Configure the Application**
    ```bash
    cp data/config.example.json data/config.json
    ```
    Edit `data/config.json` with your:
-   - MongoDB connection string
+   - MongoDB connection string (default for Docker: `mongodb://admin:changeme123@localhost:27017/jam-auth?authSource=admin`)
    - JWT secret key
    - Session secret
-   - IdP credentials (Google, etc.)
+   - IdP credentials (Google, Facebook, Apple)
 
-3. **Build the Frontend**
+4. **Build the Frontend**
    ```bash
    npm run build:frontend
    ```
