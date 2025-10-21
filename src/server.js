@@ -9,8 +9,14 @@ const cors = require('cors');
 const config = require('./config');
 const authRoutes = require('./routes/auth');
 const jwtUtils = require('./utils/jwt');
+const { connectDatabase } = require('./utils/database');
 
 const app = express();
+
+// Connect to MongoDB
+connectDatabase().catch(err => {
+  console.error('Failed to connect to database:', err);
+});
 
 // Middleware
 app.use(cors());

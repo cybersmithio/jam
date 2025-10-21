@@ -3,17 +3,16 @@ const config = require('../config');
 
 /**
  * Generate a signed JWT for an authenticated user
- * @param {Object} user - User object containing idpId, provider, name, email
+ * @param {Object} user - MongoDB User document
  * @returns {string} - Signed JWT token
  */
 function generateToken(user) {
   const payload = {
-    sub: user.idpId,          // Subject - the user's ID from IdP
-    idpId: user.idpId,        // IdP user ID
-    provider: user.provider,  // OAuth provider (google, facebook, apple)
-    email: user.email,        // User's email
-    name: user.name,          // User's display name
-    iss: 'jam-auth-service'   // Issuer - this microservice
+    sub: user._id.toString(),      // Subject - the user's MongoDB ID
+    userId: user._id.toString(),   // User's MongoDB ID
+    email: user.email,             // User's email
+    name: user.name,               // User's display name
+    iss: 'jam-auth-service'        // Issuer - this microservice
   };
 
   // Sign the token with configured secret and expiration

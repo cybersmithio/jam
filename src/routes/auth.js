@@ -6,6 +6,7 @@ const AppleStrategy = require('passport-apple').Strategy;
 const fs = require('fs');
 const path = require('path');
 const config = require('../config');
+const userService = require('../services/userService');
 
 const router = express.Router();
 
@@ -27,15 +28,20 @@ if (config.idProviders.google && config.idProviders.google.clientID) {
   },
   async (accessToken, refreshToken, profile, done) => {
     try {
-      // TODO: Implement user lookup/creation logic
-      // For now, just pass the profile
-      const user = {
-        idpId: profile.id,
+      // Find or create user in database
+      const idpProfile = {
         provider: 'google',
-        name: profile.displayName,
+        providerId: profile.id,
         email: profile.emails?.[0]?.value,
-        profile: profile
+        name: profile.displayName,
+        profileData: {
+          displayName: profile.displayName,
+          picture: profile.photos?.[0]?.value,
+          locale: profile._json.locale
+        }
       };
+
+      const user = await userService.findOrCreateUser(idpProfile);
 
       return done(null, user);
     } catch (error) {
@@ -62,15 +68,20 @@ if (config.idProviders.facebook && config.idProviders.facebook.clientID) {
   },
   async (accessToken, refreshToken, profile, done) => {
     try {
-      // TODO: Implement user lookup/creation logic
-      // For now, just pass the profile
-      const user = {
-        idpId: profile.id,
+      // Find or create user in database
+      const idpProfile = {
         provider: 'facebook',
-        name: profile.displayName,
+        providerId: profile.id,
         email: profile.emails?.[0]?.value,
-        profile: profile
+        name: profile.displayName,
+        profileData: {
+          displayName: profile.displayName,
+          firstName: profile.name?.givenName,
+          lastName: profile.name?.familyName
+        }
       };
+
+      const user = await userService.findOrCreateUser(idpProfile);
 
       return done(null, user);
     } catch (error) {
@@ -112,13 +123,18 @@ if (config.idProviders.apple && config.idProviders.apple.clientID) {
       try {
         // Apple returns user info differently - it's in the idToken
         // The name is only provided on first authorization
-        const user = {
-          idpId: profile.id || profile.sub,
+        const idpProfile = {
           provider: 'apple',
-          name: profile.name ? `${profile.name.firstName || ''} ${profile.name.lastName || ''}`.trim() : profile.email,
+          providerId: profile.id || profile.sub,
           email: profile.email,
-          profile: profile
+          name: profile.name ? `${profile.name.firstName || ''} ${profile.name.lastName || ''}`.trim() : profile.email,
+          profileData: {
+            firstName: profile.name?.firstName,
+            lastName: profile.name?.lastName
+          }
         };
+
+        const user = await userService.findOrCreateUser(idpProfile);
 
         return done(null, user);
       } catch (error) {
@@ -130,11 +146,18 @@ if (config.idProviders.apple && config.idProviders.apple.clientID) {
 
 // Serialize/deserialize user for session management
 passport.serializeUser((user, done) => {
-  done(null, user);
+  // Store only the user ID in the session
+  done(null, user._id.toString());
 });
 
-passport.deserializeUser((user, done) => {
-  done(null, user);
+passport.deserializeUser(async (id, done) => {
+  try {
+    // Retrieve full user from database
+    const user = await userService.getUserById(id);
+    done(null, user);
+  } catch (error) {
+    done(error, null);
+  }
 });
 
 /**

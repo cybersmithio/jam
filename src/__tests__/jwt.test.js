@@ -1,5 +1,6 @@
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 const config = require('../config');
 
 describe('JWT Generation Tests', () => {
@@ -25,13 +26,11 @@ describe('JWT Generation Tests', () => {
   });
 
   test('JWT utility should generate valid token for user', () => {
-    // Test the JWT utility function directly since we can't easily mock
-    // Passport authentication in integration tests
+    // Test the JWT utility function directly with MongoDB-like user object
     const mockUser = {
-      idpId: '123456789',
-      provider: 'google',
-      name: 'Test User',
-      email: 'test@example.com'
+      _id: new mongoose.Types.ObjectId(),
+      email: 'test@example.com',
+      name: 'Test User'
     };
 
     const jwtUtils = require('../utils/jwt');
@@ -42,22 +41,19 @@ describe('JWT Generation Tests', () => {
 
     // Verify the token is valid
     const decoded = jwt.verify(token, config.jwt.secret);
-    expect(decoded.idpId).toBe(mockUser.idpId);
-    expect(decoded.provider).toBe(mockUser.provider);
+    expect(decoded.userId).toBe(mockUser._id.toString());
+    expect(decoded.sub).toBe(mockUser._id.toString());
     expect(decoded.email).toBe(mockUser.email);
     expect(decoded.name).toBe(mockUser.name);
   });
 
   test('JWT should contain user information in payload', async () => {
     const mockUser = {
-      idpId: '123456789',
-      provider: 'google',
-      name: 'Test User',
-      email: 'test@example.com'
+      _id: new mongoose.Types.ObjectId(),
+      email: 'test@example.com',
+      name: 'Test User'
     };
 
-    // Test that we can decode a JWT and it contains the right data
-    // We'll call a utility function that should be exported from auth module
     const jwtUtils = require('../utils/jwt');
     const token = jwtUtils.generateToken(mockUser);
 
@@ -66,18 +62,16 @@ describe('JWT Generation Tests', () => {
 
     // Decode and verify the token
     const decoded = jwt.verify(token, config.jwt.secret);
-    expect(decoded.idpId).toBe(mockUser.idpId);
-    expect(decoded.provider).toBe(mockUser.provider);
+    expect(decoded.userId).toBe(mockUser._id.toString());
     expect(decoded.email).toBe(mockUser.email);
     expect(decoded.name).toBe(mockUser.name);
   });
 
   test('JWT should have expiration time', async () => {
     const mockUser = {
-      idpId: '123456789',
-      provider: 'google',
-      name: 'Test User',
-      email: 'test@example.com'
+      _id: new mongoose.Types.ObjectId(),
+      email: 'test@example.com',
+      name: 'Test User'
     };
 
     const jwtUtils = require('../utils/jwt');
@@ -91,10 +85,9 @@ describe('JWT Generation Tests', () => {
 
   test('JWT should be signed with configured secret', async () => {
     const mockUser = {
-      idpId: '123456789',
-      provider: 'google',
-      name: 'Test User',
-      email: 'test@example.com'
+      _id: new mongoose.Types.ObjectId(),
+      email: 'test@example.com',
+      name: 'Test User'
     };
 
     const jwtUtils = require('../utils/jwt');
@@ -119,27 +112,25 @@ describe('JWT Generation Tests', () => {
     expect(response.body).toHaveProperty('error');
   });
 
-  test('JWT should include subject (sub) claim with idpId', async () => {
+  test('JWT should include subject (sub) claim with user ID', async () => {
     const mockUser = {
-      idpId: '123456789',
-      provider: 'google',
-      name: 'Test User',
-      email: 'test@example.com'
+      _id: new mongoose.Types.ObjectId(),
+      email: 'test@example.com',
+      name: 'Test User'
     };
 
     const jwtUtils = require('../utils/jwt');
     const token = jwtUtils.generateToken(mockUser);
 
     const decoded = jwt.verify(token, config.jwt.secret);
-    expect(decoded.sub).toBe(mockUser.idpId);
+    expect(decoded.sub).toBe(mockUser._id.toString());
   });
 
   test('JWT should include issuer (iss) claim', async () => {
     const mockUser = {
-      idpId: '123456789',
-      provider: 'google',
-      name: 'Test User',
-      email: 'test@example.com'
+      _id: new mongoose.Types.ObjectId(),
+      email: 'test@example.com',
+      name: 'Test User'
     };
 
     const jwtUtils = require('../utils/jwt');
