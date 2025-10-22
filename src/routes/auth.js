@@ -111,33 +111,69 @@ if (config.idProviders.apple && config.idProviders.apple.clientID) {
   }
 
   if (privateKey) {
+    console.log('=== Apple Strategy Configuration ===');
+    console.log('Callback URL:', callbackURL);
+    console.log('Client ID:', appleConfig.clientID);
+    console.log('Team ID:', appleConfig.teamID);
+    console.log('Key ID:', appleConfig.keyID);
+    console.log('Scope:', appleConfig.scope || ['name', 'email']);
+    console.log('===================================');
+
     passport.use(new AppleStrategy({
       clientID: appleConfig.clientID,
       teamID: appleConfig.teamID,
       keyID: appleConfig.keyID,
       privateKeyString: privateKey,
       callbackURL: callbackURL,
-      scope: appleConfig.scope || ['name', 'email']
+      scope: appleConfig.scope || ['name', 'email'],
+      passReqToCallback: true
     },
-    async (accessToken, refreshToken, idToken, profile, done) => {
+    async (req, accessToken, refreshToken, idToken, profile, done) => {
       try {
-        // Apple returns user info differently - it's in the idToken
-        // The name is only provided on first authorization
+        // Debug logging to see what Apple is sending
+        console.log('=== Apple Sign In Callback ===');
+        console.log('Profile object:', JSON.stringify(profile, null, 2));
+        console.log('ID Token:', JSON.stringify(idToken, null, 2));
+        console.log('req.appleUserData:', JSON.stringify(req.appleUserData, null, 2));
+        console.log('============================');
+
+        // Apple sends user data in req.body.user on first authorization only
+        // After that, only the ID token contains the user's ID (sub)
+        // We parsed this data in middleware and stored it in req.appleUserData
+
+        // Extract email from multiple possible locations
+        const email = profile.email || idToken.email || req.appleUserData?.email;
+
+        // Extract name from req.appleUserData (first auth) or profile
+        let firstName = req.appleUserData?.name?.firstName || profile.name?.firstName;
+        let lastName = req.appleUserData?.name?.lastName || profile.name?.lastName;
+
+        // Construct display name
+        let displayName = '';
+        if (firstName || lastName) {
+          displayName = `${firstName || ''} ${lastName || ''}`.trim();
+        } else {
+          displayName = email; // Fallback to email if no name
+        }
+
         const idpProfile = {
           provider: 'apple',
-          providerId: profile.id || profile.sub,
-          email: profile.email,
-          name: profile.name ? `${profile.name.firstName || ''} ${profile.name.lastName || ''}`.trim() : profile.email,
+          providerId: profile.id || profile.sub || idToken.sub,
+          email: email,
+          name: displayName,
           profileData: {
-            firstName: profile.name?.firstName,
-            lastName: profile.name?.lastName
+            firstName: firstName,
+            lastName: lastName
           }
         };
+
+        console.log('Parsed idpProfile:', JSON.stringify(idpProfile, null, 2));
 
         const user = await userService.findOrCreateUser(idpProfile);
 
         return done(null, user);
       } catch (error) {
+        console.error('Apple authentication error:', error);
         return done(error, null);
       }
     }));
@@ -202,6 +238,33 @@ router.post('/apple',
 );
 
 router.post('/apple/callback',
+  (req, res, next) => {
+    // Debug: Log raw request data from Apple
+    console.log('=== Apple Callback Request ===');
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    console.log('Request query:', JSON.stringify(req.query, null, 2));
+    console.log('req.body.user type:', typeof req.body.user);
+
+    // Apple sends user data in req.body.user on first authorization only
+    // Store parsed data in a separate property to avoid conflicts with passport-apple
+    if (req.body.user && typeof req.body.user === 'string') {
+      try {
+        const userData = JSON.parse(req.body.user);
+        console.log('Parsed Apple user data from string:', JSON.stringify(userData, null, 2));
+        // Store in a custom property instead of overwriting req.body.user
+        req.appleUserData = userData;
+      } catch (error) {
+        console.error('Error parsing Apple user data:', error);
+      }
+    } else if (req.body.user && typeof req.body.user === 'object') {
+      // Already parsed by Express body parser
+      console.log('Apple user data (already parsed):', JSON.stringify(req.body.user, null, 2));
+      req.appleUserData = req.body.user;
+    }
+
+    console.log('============================');
+    next();
+  },
   passport.authenticate('apple', { failureRedirect: '/login' }),
   (req, res) => {
     // Successful authentication, redirect to welcome page
